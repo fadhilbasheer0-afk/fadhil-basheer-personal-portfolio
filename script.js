@@ -61,6 +61,23 @@ window.addEventListener('scroll', () => {
     });
 });
 
+// Modal handling
+const modal = document.getElementById('confirmation-modal');
+const closeModal = document.getElementById('close-modal');
+
+if (closeModal) {
+    closeModal.addEventListener('click', () => {
+        modal.classList.remove('show');
+    });
+}
+
+// Close modal when clicking outside of it
+window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('show');
+    }
+});
+
 // Form submission handler
 const contactForm = document.getElementById('contact-form');
 
@@ -73,11 +90,29 @@ contactForm.addEventListener('submit', (e) => {
     btn.textContent = 'Sending...';
     btn.style.opacity = '0.8';
     
-    // Mocking an async request
-    setTimeout(() => {
+    const formData = new FormData(contactForm);
+    const params = new URLSearchParams();
+    for (const pair of formData) {
+        params.append(pair[0], pair[1]);
+    }
+
+    fetch(contactForm.action, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params
+    })
+    .then(() => {
         btn.textContent = 'Message Sent Successfully!';
         btn.style.background = '#10b981'; // Success green
         contactForm.reset();
+        
+        // Show confirmation modal
+        if (modal) {
+            modal.classList.add('show');
+        }
         
         // Reset button after 3 seconds
         setTimeout(() => {
@@ -85,5 +120,17 @@ contactForm.addEventListener('submit', (e) => {
             btn.style.background = '';
             btn.style.opacity = '1';
         }, 3000);
-    }, 1500);
+    })
+    .catch((error) => {
+        console.error('Error submitting form:', error);
+        btn.textContent = 'Error Sending';
+        btn.style.background = '#ef4444'; // Error red
+        
+        // Reset button after 3 seconds
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '';
+            btn.style.opacity = '1';
+        }, 3000);
+    });
 });
